@@ -1,18 +1,101 @@
 <!DOCTYPE HTML>
 <html>
 <head>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 	<script>
+		var currentDot = null;
+
+		/**
+		* Add event listeners
+		**/
+		$(document).ready(function() {
+			$('.dot').on('dragstart', drag);
+			$('.dot').on('dragend', removeHints);
+			$('.landing').on('dragover', allowDrop);
+			$('.landing').on('drop', drop);
+			$('.reset').on('click', reset);
+		});
+		/**
+		* move all dots back under key div
+		**/
+		function reset() {
+			$('li').each(function(key, value){
+				var child = $(this).data('child');
+				$(this).append($('#'+child));
+			});
+		}
+		/**
+		* set the selected dot
+		**/
+		function drag(e) {
+			currentDot = $(e.currentTarget);
+		}
+		/**
+		* Mark landing green or red depending if it is a valid location
+		**/	
+		function allowDrop(e) {
+			e.preventDefault();
+			var target = $(e.currentTarget);
+			if(checkLanding(target)) {
+				//Set background to green
+				target.css('background','green');
+			} else {
+				//Set backgorund to red
+				target.css('background','red');
+			}
+		}
+		/**
+		* remove the hover over color hints
+		**/
+		function removeHints() {
+			$('.landing').css('background','');
+		}
+		/**
+		* Move dot if it is in the right location
+		**/
+		function drop(e) {
+			e.preventDefault();
+			var target = $(e.target);
+			//if it is to the right landing and that landing isn't already filled set it down
+			if(checkLanding(target)) {
+				target.append(currentDot);
+			}
+		}
+		/**
+		* Confirm that the dot is at the correct location
+		**/
+		function checkLanding(target) {
+			if(target.data('target') === currentDot.data('color') && target.children().length === 0) {
+				return true;
+			}
+			return false;
+		}
 	</script>
 	<style>
 		.map {
 			float: left;
 			width: 600px;
 		}
+		.key {
+			float: left;
+		}
+		li {
+			list-style: none;
+		}
 		.landing {
 			position: absolute;
 			height: 132px;
 			width: 132px;
-			background-color: red;
+			border-radius: 100px;
+		}
+		.landing img {
+			margin: 23px;
+		}
+		.landing.red:hover {
+			background: red;
+		}
+		.landing.green:hover {
+			background: green;
 		}
 		.area1 {
 			top: 32px;
@@ -27,7 +110,7 @@
 			left: 32px;
 		}
 		.area4 {
-			top: 271px;
+			top: 272px;
 			left: 404px;
 		}
 		.area5 {
@@ -44,30 +127,33 @@
 	</style>
 </head>
 <body>
-	<!--<div id="div1" ondrop="drop(event)" ondragover="allowDrop(event)"></div>-->
 
 	<div class="map">
 		<img id="background" src="ia-logo-back.png" draggable="false">
-		<div class="area1 landing"></div>
-		<div class="area2 landing"></div>
-		<div class="area3 landing"></div>
-		<div class="area4 landing"></div>
-		<div class="area5 landing"></div>
+		<div class="area1 landing" data-target="black"></div>
+		<div class="area2 landing" data-target="blue"></div>
+		<div class="area3 landing" data-target="red"></div>
+		<div class="area4 landing" data-target="green"></div>
+		<div class="area5 landing" data-target="black"></div>
 
 	</div>
 	<div class="key">
+		<button class="reset">Reset</button>
 		<ul>
-			<li>
-				<img id="drag1" src="ia-logo-dot-black.png" draggable="true" ondragstart="drag(event)">
+			<li data-child="drag1">
+				<img id="drag1" class="dot" data-color="black" src="ia-logo-dot-black.png" draggable="true" >
 			</li>
-			<li>
-				<img id="drag2" src="ia-logo-dot-blue.png" draggable="true" ondragstart="drag(event)">
+			<li data-child="drag2">
+				<img id="drag2" class="dot" data-color="blue" src="ia-logo-dot-blue.png" draggable="true" >
 			</li>
-			<li>
-				<img id="drag3" src="ia-logo-dot-green.png" draggable="true" ondragstart="drag(event)">
+			<li data-child="drag3">
+				<img id="drag3" class="dot" data-color="green" src="ia-logo-dot-green.png" draggable="true" >
 			</li>
-			<li>
-				<img id="drag4" src="ia-logo-dot-red.png" draggable="true" ondragstart="drag(event)">
+			<li data-child="drag4">
+				<img id="drag4" class="dot" data-color="red" src="ia-logo-dot-red.png" draggable="true" >
+			</li>
+			<li data-child="drag5">
+				<img id="drag5" class="dot" data-color="black" src="ia-logo-dot-black.png" draggable="true" >
 			</li>
 		</ul>
 	</div>
