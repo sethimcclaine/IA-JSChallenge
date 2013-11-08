@@ -3,12 +3,73 @@
 <head>
 	<script>
 	</script>
+	<style>
+		.map {
+			float: left;
+			width: 600px;
+		}
+		.landing {
+			position: absolute;
+			height: 132px;
+			width: 132px;
+			background-color: red;
+		}
+		.area1 {
+			top: 32px;
+			left: 260px;
+		}
+		.area2 {
+			top: 56px;
+			left: 440px;
+		}
+		.area3 {
+			top: 176px;
+			left: 32px;
+		}
+		.area4 {
+			top: 271px;
+			left: 404px;
+		}
+		.area5 {
+			top: 320px;
+			left: 128px;
+		}
+		.key img {
+			cursor: pointer;
+			
+		}
+		ul {
+			margin: 0;
+		}
+	</style>
 </head>
 <body>
-	<img id="background" src="ia-logo-back.png" draggable="false">
-	<img id="drag1" src="ia-logo-dot-black.png" draggable="true" >
-	<img id="drag2" src="ia-logo-dot-blue.png" draggable="true" >
-	<img id="drag3" src="ia-logo-dot-green.png" draggable="true" >
-	<img id="drag4" src="ia-logo-dot-red.png" draggable="true" >
+	<!--<div id="div1" ondrop="drop(event)" ondragover="allowDrop(event)"></div>-->
+
+	<div class="map">
+		<img id="background" src="ia-logo-back.png" draggable="false">
+		<div class="area1 landing"></div>
+		<div class="area2 landing"></div>
+		<div class="area3 landing"></div>
+		<div class="area4 landing"></div>
+		<div class="area5 landing"></div>
+
+	</div>
+	<div class="key">
+		<ul>
+			<li>
+				<img id="drag1" src="ia-logo-dot-black.png" draggable="true" ondragstart="drag(event)">
+			</li>
+			<li>
+				<img id="drag2" src="ia-logo-dot-blue.png" draggable="true" ondragstart="drag(event)">
+			</li>
+			<li>
+				<img id="drag3" src="ia-logo-dot-green.png" draggable="true" ondragstart="drag(event)">
+			</li>
+			<li>
+				<img id="drag4" src="ia-logo-dot-red.png" draggable="true" ondragstart="drag(event)">
+			</li>
+		</ul>
+	</div>
 </body>
 </html>
