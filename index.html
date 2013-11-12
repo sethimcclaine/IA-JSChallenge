@@ -1,161 +1,408 @@
 <!DOCTYPE HTML>
 <html>
-<head>
-	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-	<script>
-		var currentDot = null;
+	<head>
+		<style>
+			button {
+				position: relative;
+				z-index: 10;
+			}
+			#container {
+				margin-top: -25px;
+			}
+			#canvas {
+				background-image:url('ia-logo-back.png');
+				background-repeat: no-repeat;
+				background-position-y: 100px;
+			}
+			.map {
+				position: absolute;
+			}
+			li {
+				list-style: none;
+				display: inline;
+			}
+			.landing {
+				position: absolute;
+				height: 132px;
+				width: 132px;
+				border-radius: 100px;
+			}
+			.landing img {
+				margin: 23px;
+			}
+			.landing.red:hover {
+				background: red;
+			}
+			.landing.green:hover {
+				background: green;
+			}
+			.area1 {
+				top: 24px;
+				left: 252px;
+			}
+			.area2 {
+				top: 48px;
+				left: 432px;
+			}
+			.area3 {
+				top: 168px;
+				left: 24px;
+			}
+			.area4 {
+				top: 264px;
+				left: 396px;
+			}
+			.area5 {
+				top: 312px;
+				left: 120px;
+			}
+			.key img {
+				cursor: pointer;
+			}
+			ul {
+				margin: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<button onClick="loadImages(sources, initStage);">Reset</button>
+		<div id="container"></div>
+		<script src="http://d3lp1msu2r81bx.cloudfront.net/kjs/js/lib/kinetic-v4.7.4.min.js"></script>
+		<script defer="defer">
+			function loadImages(sources, callback) {
+				//var assetDir = 'http://www.html5canvastutorials.com/demos/assets/';
+				var assetDir = '';
+				var images = {};
+				var loadedImages = 0;
+				var numImages = 0;
+				for(var src in sources) {
+					numImages++;
+				}
+				for(var src in sources) {
+					images[src] = new Image();
+					images[src].onload = function() {
+						if(++loadedImages >= numImages) {
+							callback(images);
+						}
+					};
+					images[src].src = assetDir + sources[src];
+				}
+			}
+			function settleDot(dot, dotLayer, outline) {
 
-		/**
-		* Add event listeners
-		**/
-		$(document).ready(function() {
-			$('.dot').on('dragstart', drag);
-			$('.dot').on('dragend', removeHints);
-			$('.landing').on('dragover', allowDrop);
-			$('.landing').on('drop', drop);
-			$('.reset').on('click', reset);
-		});
-		/**
-		* move all dots back under key div
-		**/
-		function reset() {
-			$('li').each(function(key, value){
-				var child = $(this).data('child');
-				$(this).append($('#'+child));
+					dot.setDraggable(false);
+				// disable drag and drop
+				setTimeout(function() {
+					dot.setDraggable(false);
+				}, 50);
+
+				dot.setPosition(outline.x, outline.y);
+				dotLayer.draw();
+				dot.inRightPlace = true;
+				outline.x = null;
+				outline.y = null;
+			}
+			function isNearOutline(dot, outline) {
+				var a = dot;
+				var o = outline;
+				var ax = a.getX(); //dots x
+				var ay = a.getY(); //dots y
+				var x = 40; //how close you really need to be
+				if(ax > o.x - x && ax < o.x + x && ay > o.y - x && ay < o.y + x) {
+					return true;
+				} else {
+					return false;
+				}
+			}
+			function drawBackground(background, logoImg) {
+				var context = background.getContext();
+				context.drawImage(logoImg, 0, 100);
+			}
+			function initStage(images) {
+				var stage = new Kinetic.Stage({
+					container: 'container',
+					width: 600,
+					height: 700
+				});
+				var background = new Kinetic.Layer();
+				var dotLayer = new Kinetic.Layer();
+				var dotShapes = [];
+				var score = 0;
+
+				// image positions
+				var dots = {
+					black: {
+						x: 60,
+						y: 0
+					},
+					red: {
+						x: 150,
+						y: 0
+					},
+					green: {
+						x: 240,
+						y: 0
+					},
+					blue: {
+						x: 330,
+						y: 0
+					},
+					black2: {
+						x: 420,
+						y: 0
+					},
+				};
+
+				var outlines = {
+					black_landing: {
+						x: 275,
+						y: 150
+					},
+					red_landing: {
+						x: 50,
+						y: 290
+					},
+					green_landing: {
+						x: 420,
+						y: 385
+					},
+					blue_landing: {
+						x: 455,
+						y: 170
+					},
+					black2_landing: {
+						x: 145,
+						y: 435
+					},
+				};
+
+				// create draggable dots
+				for(var key in dots) {
+					// anonymous function to induce scope
+					(function() {
+						var privKey = key;
+						var anim = dots[key];
+
+						var dot = new Kinetic.Image({
+							image: images[key],
+							x: anim.x,
+							y: anim.y,
+							draggable: true
+						});
+
+					dot.createImageHitRegion();
+
+					dot.on('dragstart', function() {
+						this.moveToTop();
+						dotLayer.draw();
+					});
+					/*
+					* check if dot is in the right spot and
+					* snap into place if it is
+					*/
+					dot.on('dragmove', function() {
+						var outline = outlines[privKey + '_landing'];
+						var cont= false;
+						if (isNearOutline(dot, outline)) {
+							cont= true;
+						} else if(privKey === 'black') {
+							if(isNearOutline(dot, outlines['black2_landing'])) {
+								outline = outlines['black2_landing'];
+								cont = true;
+							}
+						}
+						else if (privKey === 'black2'){
+							if(isNearOutline(dot, outlines['black_landing'])) {
+								outline = outlines['black_landing'];
+								cont = true;
+							}
+						}
+						if(!dot.inRightPlace && cont) {
+							settleDot(dot, dotLayer, outline);
+
+							if(++score >= 5) {
+								alert('Congratulations, you\'ve completed the InspiringApps Logo!');
+							}
+						}
+					});
+					dot.on('dragend', function() {
+						if(!dot.inRightPlace ) {
+							dot.setPosition(dots[privKey].x,dots[privKey].y);
+							dotLayer.draw();
+						}
+					});
+
+					// change cursor on mouseover
+					dot.on('mouseover', function() {
+						document.body.style.cursor = 'pointer';
+					});
+
+					// return cursor on mouseout
+					dot.on('mouseout', function() {
+						document.body.style.cursor = 'default';
+					});
+
+					dotLayer.add(dot);
+					dotShapes.push(dot);
+				})();
+			}
+
+				// create dot outlines
+				for(var key in outlines) {
+					// anonymous function to induce scope
+					(function() {
+						var imageObj = images[key];
+						var out = outlines[key];
+
+						var outline = new Kinetic.Image({
+						image: imageObj,
+						x: out.x,
+						y: out.y
+					});
+
+					dotLayer.add(outline);
+					})();
+				}
+
+				stage.add(background);
+				stage.add(dotLayer);
+
+				drawBackground(background, images.logo);
+			}
+
+			var sources = {
+				logo: 'ia-logo-back.png',
+				black: 'ia-logo-dot-black.png',
+				blue: 'ia-logo-dot-blue.png',
+				green: 'ia-logo-dot-green.png',
+				red: 'ia-logo-dot-red.png',
+				black2: 'ia-logo-dot-black.png',
+				/* //landing zones
+				black_landing: 'ia-logo-dot-black.png',
+				blue_landing: 'ia-logo-dot-black.png',
+				green_landing: 'ia-logo-dot-black.png',
+				red_landing: 'ia-logo-dot-black.png',
+				black2_landing: 'ia-logo-dot-black.png',
+				*/
+			};
+			loadImages(sources, initStage);
+		</script>
+		<hr/>
+		<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+		<script>
+			var currentDot = null;
+			$(document).ready(function() {
+				//***********************//
+				//   DOM                 //
+				//***********************//
+				/**
+				* Add event listeners
+				**/
+				$('.dot').on('dragstart', drag);
+				$('.dot').on('dragend', removeHints);
+				$('.landing').on('dragover', allowDrop);
+				$('.landing').on('drop', drop);
+				$('.reset').on('click', reset);
+			/**
+			* move all dots back under key div
+			**/
+			function reset() {
+				$('li').each(function(key, value){
+					var child = $(this).data('child');
+					$(this).append($('#'+child));
+				});
+			}
+			/**
+			* set the selected dot
+			**/
+			function drag(e) {
+				currentDot = $(e.currentTarget);
+			}
+			/**
+			* Mark landing green or red depending if it is a valid location
+			**/	
+			function allowDrop(e) {
+				e.preventDefault();
+				var target = $(e.currentTarget);
+				if(checkLanding(target)) {
+					//Set background to green
+					target.css('background','green');
+				} else {
+					//Set backgorund to red
+					target.css('background','red');
+				}
+			}
+			/**
+			* remove the hover over color hints
+			**/
+			function removeHints() {
+				$('.landing').css('background','');
+			}
+			/**
+			* Move dot if it is in the right location
+			**/
+			function drop(e) {
+				e.preventDefault();
+				var target = $(e.target);
+				//if it is to the right landing and that landing isn't already filled set it down
+				if(checkLanding(target)) {
+					target.append(currentDot);
+					logoComplete();
+				}
+			}
+			/**
+			* congratulate user when logo is complete
+			**/
+			function logoComplete() {
+				var landings = $('.landing');
+				var lLength = landings.length;
+				for(i = 0; i < lLength; i++){
+					if($(landings[i]).children().length === 0) {
+						return;
+					}
+				}
+				alert("Congratulations, you've completed the InspiringApps Logo!");
+			}
+			/**
+			* Confirm that the dot is at the correct location
+			**/
+			function checkLanding(target) {
+				if(target.data('target') === currentDot.data('color') && target.children().length === 0) {
+					return true;
+				}
+				return false;
+			}
+
 			});
-		}
-		/**
-		* set the selected dot
-		**/
-		function drag(e) {
-			currentDot = $(e.currentTarget);
-		}
-		/**
-		* Mark landing green or red depending if it is a valid location
-		**/	
-		function allowDrop(e) {
-			e.preventDefault();
-			var target = $(e.currentTarget);
-			if(checkLanding(target)) {
-				//Set background to green
-				target.css('background','green');
-			} else {
-				//Set backgorund to red
-				target.css('background','red');
-			}
-		}
-		/**
-		* remove the hover over color hints
-		**/
-		function removeHints() {
-			$('.landing').css('background','');
-		}
-		/**
-		* Move dot if it is in the right location
-		**/
-		function drop(e) {
-			e.preventDefault();
-			var target = $(e.target);
-			//if it is to the right landing and that landing isn't already filled set it down
-			if(checkLanding(target)) {
-				target.append(currentDot);
-			}
-		}
-		/**
-		* Confirm that the dot is at the correct location
-		**/
-		function checkLanding(target) {
-			if(target.data('target') === currentDot.data('color') && target.children().length === 0) {
-				return true;
-			}
-			return false;
-		}
-	</script>
-	<style>
-		.map {
-			float: left;
-			width: 600px;
-		}
-		.key {
-			float: left;
-		}
-		li {
-			list-style: none;
-		}
-		.landing {
-			position: absolute;
-			height: 132px;
-			width: 132px;
-			border-radius: 100px;
-		}
-		.landing img {
-			margin: 23px;
-		}
-		.landing.red:hover {
-			background: red;
-		}
-		.landing.green:hover {
-			background: green;
-		}
-		.area1 {
-			top: 32px;
-			left: 260px;
-		}
-		.area2 {
-			top: 56px;
-			left: 440px;
-		}
-		.area3 {
-			top: 176px;
-			left: 32px;
-		}
-		.area4 {
-			top: 272px;
-			left: 404px;
-		}
-		.area5 {
-			top: 320px;
-			left: 128px;
-		}
-		.key img {
-			cursor: pointer;
-			
-		}
-		ul {
-			margin: 0;
-		}
-	</style>
-</head>
-<body>
+		</script>
+		<div class="key">
+			<button class="reset">Reset</button>
+			<ul>
+				<li data-child="drag1">
+					<img id="drag1" class="dot" data-color="black" src="ia-logo-dot-black.png" draggable="true" >
+				</li>
+				<li data-child="drag2">
+					<img id="drag2" class="dot" data-color="blue" src="ia-logo-dot-blue.png" draggable="true" >
+				</li>
+				<li data-child="drag3">
+					<img id="drag3" class="dot" data-color="green" src="ia-logo-dot-green.png" draggable="true" >
+				</li>
+				<li data-child="drag4">
+					<img id="drag4" class="dot" data-color="red" src="ia-logo-dot-red.png" draggable="true" >
+				</li>
+				<li data-child="drag5">
+					<img id="drag5" class="dot" data-color="black" src="ia-logo-dot-black.png" draggable="true" >
+				</li>
+			</ul>
+		</div>
+		<div class="map">
+			<img id="background" src="ia-logo-back.png" draggable="false">
+			<div class="area1 landing" data-target="black"></div>
+			<div class="area2 landing" data-target="blue"></div>
+			<div class="area3 landing" data-target="red"></div>
+			<div class="area4 landing" data-target="green"></div>
+			<div class="area5 landing" data-target="black"></div>
 
-	<div class="map">
-		<img id="background" src="ia-logo-back.png" draggable="false">
-		<div class="area1 landing" data-target="black"></div>
-		<div class="area2 landing" data-target="blue"></div>
-		<div class="area3 landing" data-target="red"></div>
-		<div class="area4 landing" data-target="green"></div>
-		<div class="area5 landing" data-target="black"></div>
-
-	</div>
-	<div class="key">
-		<button class="reset">Reset</button>
-		<ul>
-			<li data-child="drag1">
-				<img id="drag1" class="dot" data-color="black" src="ia-logo-dot-black.png" draggable="true" >
-			</li>
-			<li data-child="drag2">
-				<img id="drag2" class="dot" data-color="blue" src="ia-logo-dot-blue.png" draggable="true" >
-			</li>
-			<li data-child="drag3">
-				<img id="drag3" class="dot" data-color="green" src="ia-logo-dot-green.png" draggable="true" >
-			</li>
-			<li data-child="drag4">
-				<img id="drag4" class="dot" data-color="red" src="ia-logo-dot-red.png" draggable="true" >
-			</li>
-			<li data-child="drag5">
-				<img id="drag5" class="dot" data-color="black" src="ia-logo-dot-black.png" draggable="true" >
-			</li>
-		</ul>
-	</div>
-</body>
+		</div>
+	</body>
 </html>
